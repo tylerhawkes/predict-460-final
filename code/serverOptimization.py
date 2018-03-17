@@ -9,7 +9,7 @@ ssd = 'SSD'
 nvme = 'NVME'
 ddr4 = 'DDR4'
 ddr3 = 'DDR3'
-dom = 'DOM' #disk on module
+dom = 'DOM'  # disk on module
 domssd = dom + ssd
 rj45 = "RJ45"
 qsfp = "QSFP"
@@ -24,15 +24,6 @@ supermicro = "Super Micro"
 
 
 class Cpu:
-    cores = 0
-    ghz = 0
-    cacheMB = 0
-    watts = 0
-    cost = 0
-    family = 'xeon'
-    name = ''
-    countVar = None
-    useVar = None
 
     def __init__(self, model, cores, ghz, cost, name, cachemb=0, watts=0, family='xeon', minCount=0):
         self.cores = cores
@@ -49,13 +40,6 @@ class Cpu:
 
 
 class Memory:
-    memoryGB = 0
-    ddrType = str()
-    type = str()
-    MHz = 0
-    cost = 0
-    countVar = None
-    useVar = None
 
     def __init__(self, model, gb, memoryType, mhz, cost, ddr='DDR4'):
         self.memoryGB = gb
@@ -70,17 +54,6 @@ class Memory:
 
 
 class Disk:
-    tb = 0
-    iops = 0
-    streamMBs = 0
-    type = "HDD"
-    size = 2.5
-    protocol = "SATA"
-    gbps = 6
-    partNumber = ""
-    cost = 0
-    countVar = None
-    useVar = None
 
     def __init__(self, model, tb, size, cost, iops, protocol, gbps, partnumber, disktype=hdd, streammbs=0):
         self.tb = tb
@@ -108,13 +81,6 @@ class Disk:
 
 
 class Network:
-    manufacturer = "unknown"
-    cost = 0
-    speedGbit = 0
-    adapterType = "RJ45"
-    adapterCount = 0
-    countVar = None
-    useVar = None
 
     def __init__(self, model, cost, speed, adapterType, adapterCount, manufacturer):
         self.cost = cost
@@ -129,31 +95,6 @@ class Network:
 
 
 class Server:
-    name = "unknown"
-    url = ""
-    cost = 0
-    powerSupplies = 2
-    watts = 0
-    rackUnits = 1
-    osDisks = 2
-    osDiskType = 'dom'
-    cpuSlots = 2
-    memorySlots = 0
-    minMemorySlots = 0
-    disk25Slots = 0
-    disk35Slots = 0
-    nvmeSlots = 0
-    minimum25Disks = 0
-    minimum35Disks = 0
-    pcieV3X16Slots = 0
-    pcieV3X8Slots = 0
-    onBoardNetworkPorts = 0
-    siomCards = 0
-    nodes = 1
-    configuredCost = 0
-    countVar = None
-    useVar = None
-    memoryVar = None
 
     def __init__(self, model, name, url, cost, watts, rackunits, cpuslots, memoryslots, minmemoryslots, disk25slots, disk35slots, nvmeslots, minimum25disks, minimum35disks, osdisks, osdisktype, x16, x8, onboardnetworkports, siomcards, powersupplies, nodes):
         self.name = name
@@ -184,7 +125,6 @@ class Server:
         self.countVar = model.addVar(lb=0, vtype=GRB.INTEGER, name=baseVarName)
         self.useVar = model.addVar(vtype=GRB.BINARY, name="use " + baseVarName)
         model.addConstr(self.countVar - 10000 * self.useVar, GRB.LESS_EQUAL, 0, "distinctServers " + baseVarName)
-        self.memoryVar = model.addVar(lb=0, ub=int(memoryslots / minmemoryslots), vtype=GRB.INTEGER, name="memory scalar " + baseVarName)
 
     def __str__(self):
         return self.name + ":" + str(self.configuredCost)
@@ -209,8 +149,7 @@ class Rack:
         self.useVar = model.addVar(vtype=GRB.BINARY, name="rack " + name)
 
 
-def buildVars(name):
-    m = Model(name)
+def buildVars(m):
     cpus = [Cpu(m, 6, 1.7, 249, 'E5 - 2603', 15, 85),
             Cpu(m, 8, 1.7, 369, 'E5 - 2609', 20, 85),
             Cpu(m, 8, 2.1, 499, 'E5 - 2620', 20, 85),
@@ -234,8 +173,8 @@ def buildVars(name):
             Cpu(m, 22, 2.2, 4599, 'E5 - 2699', 55, 145),
             Cpu(m, 22, 2.4, 5499, 'E5 - 2699A', 55, 145)]
 
-    memory = [Memory(m, 4, 'Registered', 2400, 69),
-              Memory(m, 8, 'Registered', 2400, 139),
+    memory = [#Memory(m, 4, 'Registered', 2400, 69),
+              #Memory(m, 8, 'Registered', 2400, 139),
               Memory(m, 16, 'Registered', 2400, 229),
               Memory(m, 32, 'Registered', 2400, 399),
               Memory(m, 64, 'Registered', 2400, 929),
@@ -331,35 +270,35 @@ def buildVars(name):
             Network(m, 770, 56, qsfp, 1, supermicro),
             Network(m, 1007, 56, qsfp, 2, supermicro)]
 
-    pciNetwork = [Network(m, 156, 1, rj45, 2, intel),
-                  Network(m, 365, 1, rj45, 4, intel),
-                  Network(m, 377, 10, sfpplus, 2, intel),
-                  Network(m, 478, 10, "LC", 1, intel),
-                  Network(m, 577, 10, "LC", 2, intel),
-                  Network(m, 415, 10, rj45, 1, intel),
-                  Network(m, 629, 10, rj45, 2, intel),
-                  Network(m, 365, 10, rj45, 1, intel),
-                  Network(m, 428, 10, rj45, 2, intel),
-                  Network(m, 365, 10, sfpplus, 2, intel),
-                  Network(m, 491, 10, sfpplus, 4, intel),
-                  Network(m, 743, 10, rj45, 4, intel),
-                  Network(m, 478, 40, qsfpplus, 1, intel),
-                  Network(m, 528, 40, qsfpplus, 2, intel),
-                  Network(m, 226, 10, sfpplus, 1, mellanox),
-                  Network(m, 289, 10, sfpplus, 2, mellanox),
-                  Network(m, 453, 56, qsfp, 1, mellanox),
-                  Network(m, 566, 56, qsfp, 2, mellanox),
-                  Network(m, 226, 10, sfp28, 1, mellanox),
-                  Network(m, 289, 10, sfp28, 2, mellanox),
-                  Network(m, 276, 25, sfp28, 1, mellanox),
-                  Network(m, 352, 25, sfp28, 2, mellanox),
-                  Network(m, 440, 40, qsfp28, 1, mellanox),
-                  Network(m, 503, 50, qsfp28, 1, mellanox),
-                  Network(m, 453, 56, qsfp28, 1, mellanox),
-                  Network(m, 566, 56, qsfp28, 2, mellanox),
-                  Network(m, 503, 50, qsfp28, 1, mellanox),
+    pciNetwork = [# Network(m, 156, 1, rj45, 2, intel),
+                  # Network(m, 365, 1, rj45, 4, intel),
+                  # Network(m, 377, 10, sfpplus, 2, intel),
+                  # Network(m, 478, 10, "LC", 1, intel),
+                  # Network(m, 577, 10, "LC", 2, intel),
+                  # Network(m, 415, 10, rj45, 1, intel),
+                  # Network(m, 629, 10, rj45, 2, intel),
+                  # Network(m, 365, 10, rj45, 1, intel),
+                  # Network(m, 428, 10, rj45, 2, intel),
+                  # Network(m, 365, 10, sfpplus, 2, intel),
+                  # Network(m, 491, 10, sfpplus, 4, intel),
+                  # Network(m, 743, 10, rj45, 4, intel),
+                  # Network(m, 478, 40, qsfpplus, 1, intel),
+                  # Network(m, 528, 40, qsfpplus, 2, intel),
+                  # Network(m, 226, 10, sfpplus, 1, mellanox),
+                  # Network(m, 289, 10, sfpplus, 2, mellanox),
+                  # Network(m, 453, 56, qsfp, 1, mellanox),
+                  # Network(m, 566, 56, qsfp, 2, mellanox),
+                  # Network(m, 226, 10, sfp28, 1, mellanox),
+                  # Network(m, 289, 10, sfp28, 2, mellanox),
+                  # Network(m, 276, 25, sfp28, 1, mellanox),
+                  # Network(m, 352, 25, sfp28, 2, mellanox),
+                  # Network(m, 440, 40, qsfp28, 1, mellanox),
+                  # Network(m, 503, 50, qsfp28, 1, mellanox),
+                  # Network(m, 453, 56, qsfp28, 1, mellanox),
+                  # Network(m, 566, 56, qsfp28, 2, mellanox),
+                  # Network(m, 503, 50, qsfp28, 1, mellanox),
                   Network(m, 617, 50, qsfp28, 2, mellanox),
-                  Network(m, 843, 100, qsfp28, 1, mellanox),
+                  # Network(m, 843, 100, qsfp28, 1, mellanox),
                   Network(m, 1007, 100, qsfp28, 2, mellanox),
                   # Ignoring last 4 inifiniband network cards
                   ]
@@ -367,30 +306,31 @@ def buildVars(name):
     servers = [
                Server(m, "24x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6028r-e1cr24n", 3705, 1600, 2, 2, 24, 8, 0, 24, 0, 0, 12, 2, domssd, 2, 1, 0, 1, 2, 1),
                Server(m, "16x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6028r-e1cr16t", 2391, 1000, 2, 2, 16, 8, 0, 16, 0, 0, 0, 2, domssd, 1, 6, 2, 0, 2, 1),
-               Server(m, "16x3.5 3U", "https://www.thinkmate.com/product/supermicro/ssg-6038r-e1cr16h", 2437, 920, 3, 2, 16, 8, 0, 16, 0, 0, 0, 2, domssd, 1, 6, 2, 0, 2, 1),
+               #Server(m, "16x3.5 3U", "https://www.thinkmate.com/product/supermicro/ssg-6038r-e1cr16h", 2437, 920, 3, 2, 16, 8, 0, 16, 0, 0, 0, 2, domssd, 1, 6, 2, 0, 2, 1),
                Server(m, "90x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr90l", 8774, 1000, 4, 2, 8, 8, 0, 90, 0, 0, 45, 2, domssd, 0, 0, 4, 1, 2, 1),
                Server(m, "72x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr72l", 8689, 2000, 4, 2, 16, 8, 0, 72, 0, 0, 36, 2, domssd, 1, 3, 2, 0, 2, 1),
                Server(m, "60x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr60n", 5353, 2000, 4, 2, 24, 8, 0, 60, 6, 0, 30, 2, dom, 2, 1, 0, 1, 2, 1),
-               Server(m, "36x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr36n", 3480, 1280, 4, 2, 24, 8, 0, 36, 0, 0, 0, 2, dom, 1, 6, 4, 0, 2, 1),
-               Server(m, "24x3.5 4U", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr24n", 2892, 920, 4, 2, 24, 8, 0, 24, 0, 0, 0, 2, domssd, 1, 3, 4, 0, 2, 1),
-               Server(m, "12x3.5", "https://www.thinkmate.com/product/supermicro/sys-6028r-tdwnr", 1623, 920, 2, 2, 16, 8, 0, 12, 0, 0, 0, 2, dom, 0, 4, 2, 0, 2, 1),
+               #Server(m, "36x3.5", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr36n", 3480, 1280, 4, 2, 24, 8, 0, 36, 0, 0, 0, 2, dom, 1, 6, 4, 0, 2, 1),
+               #Server(m, "24x3.5 4U", "https://www.thinkmate.com/product/supermicro/ssg-6048r-e1cr24n", 2892, 920, 4, 2, 24, 8, 0, 24, 0, 0, 0, 2, domssd, 1, 3, 4, 0, 2, 1),
+               #Server(m, "12x3.5", "https://www.thinkmate.com/product/supermicro/sys-6028r-tdwnr", 1623, 920, 2, 2, 16, 8, 0, 12, 0, 0, 0, 2, dom, 0, 4, 2, 0, 2, 1),
                Server(m, "48x2.5", "https://www.thinkmate.com/product/supermicro/ssg-2028r-e1cr48n", 4146, 1600, 2, 2, 24, 8, 48, 0, 0, 24, 0, 2, domssd, 2, 1, 2, 1, 2, 1),
                Server(m, "24x2.5", "https://www.thinkmate.com/product/supermicro/ssg-2028r-e1cr24h", 2441, 920, 2, 2, 16, 8, 24, 0, 0, 0, 0, 2, domssd, 1, 6, 2, 0, 2, 1),
                Server(m, "24x2.5 4 Node", "https://www.thinkmate.com/product/supermicro/sys-2028tp-hc1r-siom", 4685, 2000, 2, 2, 16, 8, 6, 0, 0, 1, 0, 1, dom, 1, 1, 0, 1, 2, 4),
-               Server(m, "8x2.5 2 Node", "https://www.thinkmate.com/product/supermicro/sys-1028tp-dc1tr", 2718, 1000, 1, 2, 16, 8, 4, 0, 0, 0, 0, 1, dom, 1, 0, 2, 0, 2, 2),
+               #Server(m, "8x2.5 2 Node", "https://www.thinkmate.com/product/supermicro/sys-1028tp-dc1tr", 2718, 1000, 1, 2, 16, 8, 4, 0, 0, 0, 0, 1, dom, 1, 0, 2, 0, 2, 2),
                Server(m, "24x2.5 2 Node", "https://www.thinkmate.com/product/supermicro/sys-2028tp-dc1tr", 2989, 1280, 2, 2, 16, 8, 12, 0, 0, 0, 0, 1, dom, 1, 1, 2, 0, 2, 2),
-               Server(m, "16x2.5 2 Node", "https://www.thinkmate.com/product/supermicro/sys-2028tp-dttr", 2632, 1280, 2, 2, 16, 8, 8, 0, 0, 0, 0, 1, dom, 1, 1, 2, 0, 2, 2),
+               #Server(m, "16x2.5 2 Node", "https://www.thinkmate.com/product/supermicro/sys-2028tp-dttr", 2632, 1280, 2, 2, 16, 8, 8, 0, 0, 0, 0, 1, dom, 1, 1, 2, 0, 2, 2),
                ]
 
-    racks = [Rack(m, "1", 37, availableWattsPerRack, 35000, rackCostPerMonth, serverCostTimeHorizonYears),
-             Rack(m, "2", 37, availableWattsPerRack, 35000, rackCostPerMonth, serverCostTimeHorizonYears),
-             Rack(m, "3", 38, availableWattsPerRack, 20000, rackCostPerMonth, serverCostTimeHorizonYears),]
+    racks = [Rack(m, "1", 32, availableWattsPerRack, 35000, rackCostPerMonth, serverCostTimeHorizonYears),
+             Rack(m, "2", 32, availableWattsPerRack, 35000, rackCostPerMonth, serverCostTimeHorizonYears),
+             Rack(m, "3", 36, availableWattsPerRack, 20000, rackCostPerMonth, serverCostTimeHorizonYears),]
 
-    return m, cpus, memory, disk25, disk35, diskNvme, siom, pciNetwork, servers, racks
+    return cpus, memory, disk25, disk35, diskNvme, siom, pciNetwork, servers, racks
 
 
 def ilp():
-    m, cpus, memory, disk25, disk35, diskNvme, siom, pciNetwork, servers, racks = buildVars("ILP")
+    m = Model("ILP")
+    cpus, memory, disk25, disk35, diskNvme, siom, pciNetwork, servers, racks = buildVars(m)
 
     cost = LinExpr()
 
@@ -403,8 +343,6 @@ def ilp():
     serverCpuSlots = LinExpr()
     serverMemorySlots = LinExpr()
     serverMinMemorySlots = LinExpr()
-    serverMemoryBundles = LinExpr()
-    serverMinMemoryBundles = LinExpr()
     server25DiskSlots = LinExpr()
     server35DiskSlots = LinExpr()
     serverNvmeSlots = LinExpr()
@@ -422,8 +360,6 @@ def ilp():
         serverCpuSlots = serverCpuSlots + server.countVar * (server.cpuSlots * server.nodes)
         serverMemorySlots = serverMemorySlots + server.countVar * (server.memorySlots * server.nodes)
         serverMinMemorySlots = serverMinMemorySlots + server.countVar * (server.minMemorySlots * server.nodes)
-        serverMemoryBundles = serverMemoryBundles + server.countVar * (server.memorySlots / server.minMemorySlots * server.nodes)
-        serverMinMemoryBundles = serverMinMemoryBundles + server.countVar * (1 * server.nodes)  # server.minMemorySlots / server.minMemorySlot = 1
         server25DiskSlots = server25DiskSlots + server.countVar * (server.disk25Slots * server.nodes)
         min25Disks = min25Disks + server.countVar * (server.minimum25Disks * server.nodes)
         server35DiskSlots = server35DiskSlots + server.countVar * (server.disk35Slots * server.nodes)
@@ -483,7 +419,6 @@ def ilp():
     m.addConstr(memoryGB, GRB.GREATER_EQUAL, minMemory, "minMemory")
     m.addConstr(memorySlots, GRB.LESS_EQUAL, serverMemorySlots, "maxMemorySlotsAvailable")
     m.addConstr(memorySlots, GRB.GREATER_EQUAL, serverMinMemorySlots, "minMemorySlotsRequiredByServers")
-    #m.addConstr(memorySlots, GRB.LESS_EQUAL, serverMemoryBundles)
     m.addConstr(nodeCount * maxAvgMemoryPerNode - memoryGB, GRB.GREATER_EQUAL, 0, "maxAvgMemoryPerNode")
     m.addConstr(nodeCount * minAvgMemoryPerNode - memoryGB, GRB.LESS_EQUAL, 0, "minAvgMemoryPerNode")
 
@@ -537,7 +472,7 @@ def ilp():
     m.addConstr(diskTypesNvme, GRB.LESS_EQUAL, maxDistinctNvmeDisks, "maxDistinctNvmeDisks")
     m.addConstr(diskTB, GRB.GREATER_EQUAL, minDiskTB, "minimumTerabytes")
     m.addConstr(diskHddTB, GRB.GREATER_EQUAL, minDiskHddTB, "minimumHddTB")
-    m.addConstr(minDiskFastTB, GRB.GREATER_EQUAL, minDiskFastTB, "minimumFastTB")
+    m.addConstr(diskFastTB, GRB.GREATER_EQUAL, minDiskFastTB, "minimumFastTB")
     m.addConstr(diskIOPS, GRB.GREATER_EQUAL, minDiskIOPS, "minimumIOPS")
     m.addConstr(diskHddIOPS, GRB.GREATER_EQUAL, minDiskHddIOPS, "minimumHddIOPS")
     m.addConstr(diskFastIOPS, GRB.GREATER_EQUAL, minDiskFastIOPS, "minimumFastIOPS")
@@ -603,36 +538,36 @@ def ilp():
 # Servers
 maxDistinctServerTypes = 1
 minServers = 0
-maxServers = 18
+maxServers = 50
 
 # Memory
 maxDistinctMemory = 1
-minMemory = 12288
+minMemory = 10240
 maxAvgMemoryPerNode = 3000
 minAvgMemoryPerNode = 256
 
 # Cpus
-maxDistinctCpus = 2
+maxDistinctCpus = 1
 minCores = 0
-minGigaflops = 700
+minGigaflops = 2300 + 700
 
 # Disk
-maxDistinctDisks = 2
-maxDistinct25Disks = 2
+maxDistinctDisks = 3
+maxDistinct25Disks = 1
 maxDistinct35Disks = 1
 maxDistinctNvmeDisks = 0
-minDiskCount = 720
-minDiskTB = 3600
+minDiskCount = 0
+minDiskTB = 1800
 minDiskIOPS = 0
-minDiskStreamMBs = 12000
-minDiskHddIOPS = 30000
-minDiskHddTB = 600
+minDiskStreamMBs = 0
+minDiskHddIOPS = 0
+minDiskHddTB = 0
 minDiskFastIOPS = 0
-minDiskFastTB = 300
+minDiskFastTB = 0
 fillAllDiskSlots = True
 
 # Netowrk
-minTotalNetworkSpeedGigabits = 3000
+minTotalNetworkSpeedGigabits = 4300
 minNetworkConnectionsPerNode = 2
 maxNetworkConnections = 10000
 maxDistinctNetworkCards = 1
@@ -642,13 +577,301 @@ allowSiomCards = False
 
 # Racks
 rackCostPerMonth = 2000
-serverCostTimeHorizonYears = 3
-availableWattsPerRack = 999999
+serverCostTimeHorizonYears = 0
+availableWattsPerRack = 20000
 # Used to shut off rack costs
-rackCostScalingFactor = 0.000001
+rackCostScalingFactor = 0
 
 
 bestIlp = ilp()
 print(bestIlp)
 
 
+class Goal:
+    def __init__(self, model, name, goal, nWeight=0, pWeight=0, nBound=-1, pBound=-1):
+        self.model = model
+        self.name = name
+        self.goal = goal
+        self.negativeDeviationWeight = nWeight
+        self.positiveDeviationWeight = pWeight
+        self.negativeDeviationBound = nBound
+        self.positiveDeviationBound = pBound
+        self.negativeDeviation = None
+        self.positiveDeviation = None
+        self.linExpr = LinExpr()
+        self.objective = LinExpr()
+        self.min = None
+        self.max = None
+
+    def finalize(self):
+        if self.min is not None:
+            self.model.addConstr(self.linExpr, GRB.GREATER_EQUAL, self.min, "min " + self.name)
+        if self.max is not None:
+            self.model.addConstr(self.linExpr, GRB.LESS_EQUAL, self.max, "max " + self.name)
+        if isinstance(self.goal, LinExpr):
+            self.model.addConstr(self.linExpr, GRB.EQUAL, self.goal, "equal " + self.name)
+        elif self.goal is not None:
+            if self.negativeDeviationBound >= 0:
+                self.negativeDeviation = self.model.addVar(lb=0, ub=self.negativeDeviationBound, vtype=GRB.INTEGER, name=self.name + " negative deviation")
+            else:
+                self.negativeDeviation = self.model.addVar(lb=0, vtype=GRB.INTEGER, name=self.name + " negative deviation")
+            if self.positiveDeviationBound >= 0:
+                self.positiveDeviation = self.model.addVar(lb=0, ub=self.positiveDeviationBound, vtype=GRB.INTEGER, name=self.name + " positive deviation")
+            else:
+                self.positiveDeviation = self.model.addVar(lb=0, vtype=GRB.INTEGER, name=self.name + " positive deviation")
+            self.linExpr = self.linExpr + self.negativeDeviation - self.positiveDeviation
+            self.model.addConstr(self.linExpr, GRB.EQUAL, self.goal, "goal " + self.name)
+            if self.goal != 0:
+                self.objective = (self.negativeDeviationWeight / float(self.goal)) * self.negativeDeviation + (self.positiveDeviationWeight / float(self.goal)) * self.positiveDeviation
+            else:
+                self.objective = self.negativeDeviationWeight * self.negativeDeviation + self.positiveDeviationWeight * self.positiveDeviation
+        return self.objective
+
+    def add(self, other):
+        self.linExpr = self.linExpr + other
+
+    def subtract(self, other):
+        self.linExpr = self.linExpr - other
+
+    def setMax(self, expr):
+        self.max = expr
+        self.goal = None
+        return self
+
+    def setMin(self, expr):
+        self.min = expr
+        self.goal = None
+        return self
+
+    def setEqual(self, expr):
+        self.goal = expr
+        self.negativeDeviationBound = 0
+        self.negativeDeviationWeight = 1
+        self.positiveDeviationBound = 0
+        self.positiveDeviationWeight = 1
+
+
+class Goals:
+
+    def __init__(self, name):
+        m = Model(name)
+        self.model = m
+        self.cost = Goal(m, "cost", goal=400000, pWeight=4000)  # 432304
+
+        # Servers
+        self.distinctServerTypes = Goal(m, "distinctServerTypes", goal=1, pWeight=1, pBound=0)
+        self.serverCount = Goal(m, "serverCount", goal=0)
+        self.nodeCount = Goal(m, "nodeCount", goal=0)
+
+        # Memory
+        # True Constraint
+        self.distinctMemoryTypes = Goal(m, "distinctMemoryTypes", goal=1, pWeight=1, pBound=0)
+        self.memoryGB = Goal(m, "memoryGB", goal=10240, nWeight=10000000, nBound=1000)
+        # self.avgMemoryPerNode = Goal(m, "avgMemoryPerNode", goal=256, nWeight=1, pWeight=1, nBound=128, pBound=3000)
+
+        # Cpus
+        self.distinctCpuTypes = Goal(m, "distinctCpuTypes", goal=1, pWeight=1, pBound=0)
+        self.cpuCores = Goal(m, "cpuCores", goal=0, nWeight=1000000)
+        self.cpuGigaflops = Goal(m, "cpuGigaflops", goal=3000, nWeight=300000, nBound=10000)
+
+        # Disk
+        self.distinctDiskTypes = Goal(m, "distinctDiskTypes", goal=2, pWeight=1, pBound=0)
+        self.distinct25DiskTypes = Goal(m, "distinct25DiskTypes", goal=1, pWeight=1, pBound=0)
+        self.distinct35DiskTypes = Goal(m, "distinct35DiskTypes", goal=1, pWeight=1, pBound=0)
+        self.distinctNvmeDiskTypes = Goal(m, "distinctNvmeDiskTypes", goal=0, pBound=0)
+        self.diskCount = Goal(m, "diskCount", goal=0, nWeight=1, nBound=0)
+        self.disk25Count = Goal(m, "disk25Count", goal=0)
+        self.disk35Count = Goal(m, "disk35Count", goal=0)
+        self.diskNvmeCount = Goal(m, "diskNvmeCount", goal=0)
+        self.diskTB = Goal(m, "diskTB", goal=1800, nWeight=1000000, nBound=1800)
+        self.diskIOPS = Goal(m, "diskIOPS", goal=0, nWeight=1)
+        self.diskStreamMBs = Goal(m, "streamMBs", goal=10000, nWeight=1, nBound=0)
+        self.diskHddIOPS = Goal(m, "diskHddIOPS", goal=0, nWeight=1, nBound=0)
+        self.diskHddTB = Goal(m, "diskHddTB", goal=0, nWeight=1, nBound=0)
+        self.diskFastIOPS = Goal(m, "diskFastIOPS", goal=0, nWeight=1, nBound=0)
+        self.diskFastTB = Goal(m, "diskFastTB", goal=0, nWeight=1, nBound=0)
+        self.fillAllDiskSlots = True
+
+        # Network
+        self.totalNetworkSpeedGigabits = Goal(m, "totalNetworkSpeedGigabits", 12000, nWeight=1, nBound=0)
+        self.minNetworkConnectionsPerNode = 2
+        self.networkConnections = Goal(m, "networkConnections", goal=0)
+        self.distinctNetworkCardTypes = Goal(m, "distinctNetworkCardTypes", goal=1, pWeight=1, pBound=0)
+        self.minNetworkCardsPerNode = 1
+        self.maxNetowrkCardsPerNode = 1
+        self.allowSiomCards = False
+
+        # Racks
+        self.rackUnits = Goal(m, "rackUnits", goal=32)
+        self.watts = Goal(m, "watts", goal=0)
+        self.racks = Goal(m, "racks", goal=1, pWeight=1)
+        self.rackCostPerMonth = 2000
+        self.serverCostTimeHorizonYears = 3
+        self.availableWattsPerRack = 20000
+        # Used to shut off rack costs
+        self.rackCostScalingFactor = 0
+
+    def finalize(self):
+        allGoals = [attr for attr in dir(self) if isinstance(getattr(self, attr), Goal)]
+        objective = LinExpr()
+        for goal in allGoals:
+            objective = objective + getattr(self, goal).finalize()
+        return objective
+
+
+def goalProgramming(i):
+    m = i.model
+    cpus, memory, disk25, disk35, diskNvme, siom, pciNetwork, servers, racks = buildVars(m)
+
+    ##### Server #####
+
+    serverCpuSlots = LinExpr()
+    serverMemorySlots = LinExpr()
+    serverMinMemorySlots = LinExpr()
+    server25DiskSlots = LinExpr()
+    server35DiskSlots = LinExpr()
+    serverNvmeSlots = LinExpr()
+    min25Disks = LinExpr()
+    min35Disks = LinExpr()
+    maxSiomCards = LinExpr()
+    maxPciNetworkCards = LinExpr()
+    for server in servers:
+        i.serverCount.add(server.countVar)
+        i.distinctServerTypes.add(server.useVar)
+        i.nodeCount.add(server.countVar * server.nodes)
+        i.rackUnits.add(server.countVar * server.rackUnits)
+        i.watts.add(server.countVar * server.watts)
+        i.cost.add(server.countVar * server.configuredCost)
+
+        serverCpuSlots = serverCpuSlots + server.countVar * (server.cpuSlots * server.nodes)
+        serverMemorySlots = serverMemorySlots + server.countVar * (server.memorySlots * server.nodes)
+        serverMinMemorySlots = serverMinMemorySlots + server.countVar * (server.minMemorySlots * server.nodes)
+        server25DiskSlots = server25DiskSlots + server.countVar * (server.disk25Slots * server.nodes)
+        min25Disks = min25Disks + server.countVar * (server.minimum25Disks * server.nodes)
+        server35DiskSlots = server35DiskSlots + server.countVar * (server.disk35Slots * server.nodes)
+        min35Disks = min35Disks + server.countVar * (server.minimum35Disks * server.nodes)
+        serverNvmeSlots = serverNvmeSlots + server.countVar * (server.nvmeSlots * server.nodes)
+        maxSiomCards = maxSiomCards + server.countVar * (server.siomCards * server.nodes)
+        maxPciNetworkCards = maxPciNetworkCards + server.countVar * ((server.pcieV3X16Slots + server.pcieV3X8Slots) * server.nodes)
+
+    ##### Racks #####
+
+    maxRackUnits = LinExpr()
+    maxWatts = LinExpr()
+    previousRack = None
+    for rack in racks:
+        if previousRack is not None:
+            m.addConstr(rack.useVar, GRB.LESS_EQUAL, previousRack.useVar, "rack {} after rack {}".format(rack, previousRack))
+        #previousRack = rack
+        i.racks.add(rack.useVar)
+        maxRackUnits = maxRackUnits + rack.useVar * rack.availableRackUnits
+        maxWatts = maxWatts + rack.useVar * rack.availableWatts
+        i.cost.add(rack.useVar * i.rackCostScalingFactor * (rack.networkCost + (rack.costPerMonth * 12 * rack.timeHorizonYears)))
+
+    i.rackUnits.setMax(maxRackUnits)
+    i.watts.setMax(maxWatts)
+
+    ##### CPU #####
+    cpuCount = LinExpr()
+    for cpu in cpus:
+        i.distinctCpuTypes.add(cpu.useVar)
+        i.cpuCores.add(cpu.countVar * cpu.cores)
+        i.cpuGigaflops.add(cpu.countVar * (cpu.cores * cpu.ghz))
+        i.cost.add(cpu.countVar * cpu.cost)
+        cpuCount = cpuCount + cpu.countVar
+
+    m.addConstr(serverCpuSlots, GRB.EQUAL, cpuCount, "fillCpuSlots")
+
+    ##### Memory #####
+    memorySlots = LinExpr()
+    for mem in memory:
+        i.distinctMemoryTypes.add(mem.useVar)
+        i.memoryGB.add(mem.countVar * mem.memoryGB)
+        i.cost.add(mem.countVar * mem.cost)
+        memorySlots = memorySlots + mem.countVar
+
+    m.addConstr(memorySlots, GRB.LESS_EQUAL, serverMemorySlots, "maxMemorySlotsAvailable")
+    m.addConstr(memorySlots, GRB.GREATER_EQUAL, serverMinMemorySlots, "minMemorySlotsRequiredByServers")
+
+    ##### Disk #####
+    allDisks = []
+    allDisks.extend(disk25)
+    allDisks.extend(disk35)
+    allDisks.extend(diskNvme)
+
+    for disk in disk25:
+        i.disk25Count.add(disk.countVar)
+        i.distinct25DiskTypes.add(disk.useVar)
+    for disk in disk35:
+        i.disk35Count.add(disk.countVar)
+        i.distinct35DiskTypes.add(disk.useVar)
+    for disk in diskNvme:
+        i.diskNvmeCount.add(disk.countVar)
+        i.distinctNvmeDiskTypes.add(disk.useVar)
+
+    for disk in allDisks:
+        i.distinctDiskTypes.add(disk.useVar)
+        i.diskCount.add(disk.countVar)
+        i.diskTB.add(disk.countVar * disk.tb)
+        i.diskIOPS.add(disk.countVar * disk.iops)
+        i.diskStreamMBs.add(disk.countVar * disk.streamMBs)
+        i.cost.add(disk.countVar * disk.cost)
+        if disk.type == hdd:
+            i.diskHddTB.add(disk.countVar * disk.tb)
+            i.diskHddIOPS.add(disk.countVar * disk.iops)
+        else:
+            i.diskFastTB.add(disk.countVar * disk.tb)
+            i.diskFastIOPS.add(disk.countVar * disk.iops)
+
+    if i.fillAllDiskSlots:
+        i.disk35Count.setEqual(server35DiskSlots)
+        i.disk25Count.setEqual(server25DiskSlots)
+    else:
+        i.disk25Count.setMin(min25Disks).setMax(server25DiskSlots)
+        i.disk35Count.setMin(min35Disks).setMax(server35DiskSlots)
+
+    ##### Network #####
+    networks = []
+    networks.extend(siom)
+    networks.extend(pciNetwork)
+
+    networkCards = LinExpr()
+    for network in networks:
+        networkCards = networkCards + network.countVar
+        i.totalNetworkSpeedGigabits.add(network.countVar * (network.speedGbit * network.adapterCount))
+        i.networkConnections.add(network.countVar * network.adapterCount)
+        i.distinctNetworkCardTypes.add(network.useVar)
+        i.cost.add(network.countVar * network.cost)
+
+    siomCardCount = LinExpr()
+    for s in siom:
+        siomCardCount = siomCardCount + s.countVar
+
+    pciNetworkCount = LinExpr()
+    for pci in pciNetwork:
+        pciNetworkCount = pciNetworkCount + pci.countVar
+
+    m.addConstr(networkCards, GRB.GREATER_EQUAL, i.nodeCount.linExpr * i.minNetworkCardsPerNode, "minNetworkCardPerNode")
+    i.networkConnections.setMin(i.minNetworkConnectionsPerNode * i.nodeCount.linExpr)
+    m.addConstr(siomCardCount, GRB.LESS_EQUAL, maxSiomCards if allowSiomCards else 0, "maxSiomCards")
+    m.addConstr(pciNetworkCount, GRB.LESS_EQUAL, maxPciNetworkCards, "maxPciNetworkCards")
+
+    ##### Objective #####
+
+    objective = i.finalize()
+
+    m.setObjective(objective, GRB.MINIMIZE)
+
+    m.optimize()
+
+    m.write("goalModel.lp")
+
+    for v in m.getVars():
+        if abs(v.X) > 1e-6 and not v.varName.startswith("use "):
+            print (v.varName, int(round(v.X, 0)))
+    return m.getAttr("ObjVal")
+
+
+# goals = Goals("goalProgramming")
+# bestGoals = goalProgramming(goals)
+# print("best optimization function = {}".format(bestGoals))
